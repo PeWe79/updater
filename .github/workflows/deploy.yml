@@ -1,0 +1,52 @@
+name: Deploy Docker Image
+
+on: [ push, pull_request, workflow_dispatch ]
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Reduce Git repository size.
+        run: |
+          git gc --prune=now --aggressive
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        id: qemu
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ghcr.io/azuracast/updater
+          tags: |
+            type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+
+      - name: Publish to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/azuracast/updater:buildcache,mode=max
+          cache-to: type=registry,ref=ghcr.io/azuracast/updater:buildcache,mode=max
