@@ -34,7 +34,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/azuracast/updater
+            ghcr.io/pewe79/updater
           tags: |
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
             type=ref,event=branch
@@ -48,5 +48,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=ghcr.io/azuracast/updater:buildcache,mode=max
-          cache-to: type=registry,ref=ghcr.io/azuracast/updater:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/pewe79/updater:buildcache,mode=max
+          cache-to: type=registry,ref=ghcr.io/pewe79/updater:buildcache,mode=max
